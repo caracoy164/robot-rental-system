@@ -602,14 +602,20 @@ public class App {
                 SQL.ps_findMostPopularManufacturer(sql3);
                 break;
             case "4":
-                findMostUsedDriverlessCar();
+                String sql4 = "SELECT DC.DC_Serial_Number, DC.License_Plate, SUM(C.Facility_Distance) AS Total_Miles_Driven, COUNT(RO.Robot_Serial_Number) AS Total_Robots_Delivered FROM Driverless_Car AS DC JOIN Rental_Order RO ON DC.DC_Serial_Number = RO.DC_Serial_Number JOIN Customer C ON RO.Customer_SSN = C.Customer_SSN GROUP BY DC.DC_Serial_Number, DC.License_Plate ORDER BY Total_Robots_Delivered DESC LIMIT 1;";
+                SQL.ps_findMostUsedDriverlessCar(sql4);
                 break;
             case "5":
                 String sql5 = "SELECT Customer_SSN, COUNT(Robot_Serial_Number) AS Robot_Serial_Number_Count FROM Rental_Order GROUP BY Customer_SSN ORDER BY Robot_Serial_Number_Count DESC LIMIT 1";
                 SQL.ps_findCustomerWithMostRents(sql5);
                 break;
             case "6":
-                listRobotsByManufacturer();
+                System.out.println("Enter manufacturer: ");
+                String manufacturer = scanner.nextLine().trim();
+                System.out.print("Enter year: ");
+                int year = Integer.parseInt(scanner.nextLine());
+                String sql6 = "SELECT Name FROM Manufacturer NATURAL JOIN Model WHERE Manufacturer_Name = ? AND Year < ?";
+                SQL.ps_listRobotsByManufacturer(sql6, manufacturer, year);
                 break;
             case "7":
                 return; // Go back to main menu

@@ -383,9 +383,31 @@ public class SQL {
         sqlQuery(Database.conn, ps);
     }
 
+public static void ps_findMostUsedDriverlessCar(String sql) {
+        try {
+            ps = Database.conn.prepareStatement(sql);
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+        
+        sqlQuery(Database.conn, ps);
+    }
+
     public static void ps_findCustomerWithMostRents(String sql) {
         try {
             ps = Database.conn.prepareStatement(sql);
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+        
+        sqlQuery(Database.conn, ps);
+    }
+
+    public static void ps_listRobotsByManufacturer(String sql, String manufacturer, int year) {
+        try {
+            ps = Database.conn.prepareStatement(sql);
+            ps.setString(1, manufacturer);
+            ps.setInt(2, year);
         } catch (SQLException e) {
             System.out.println(e.getMessage());
         }
