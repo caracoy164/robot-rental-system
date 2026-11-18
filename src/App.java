@@ -450,79 +450,122 @@ public class App {
     private static void rentRobot() {
         System.out.println("\n=== Rent a Robot ===");
 
-        System.out.print("Enter customer ID: ");
-        String customerId = scanner.nextLine();
+        int rentalNumber;
+        try {
+            System.out.print("Enter rental number to edit: ");
+            rentalNumber = Integer.parseInt(scanner.nextLine().trim());
+        } catch (NumberFormatException e) {
+            System.out.println("Invalid rental number.");
+            return;
+        }
+
+        System.out.print("Enter customer SSN: ");
+        String customerSSN = scanner.nextLine().trim();
 
         System.out.print("Enter robot serial number: ");
-        String serialNumber = scanner.nextLine();
+        String robotSerialNumber = scanner.nextLine().trim();
 
-        System.out.print("Enter checkout date (YYYY-MM-DD): ");
-        String checkoutDate = scanner.nextLine();
+        LocalDate checkOutDate = readDate("Check out date (YYYY-MM-DD): ");
+        if (checkOutDate == null) {
+            System.out.println("Invalid date, so rental order not created.");
+            return;
+        }
+        
+        LocalDate dueDate = readDate("Due date (YYYY-MM-DD): ");
+        if (dueDate == null || dueDate.isBefore(checkOutDate)) {
+            System.out.println("Invalid due date, so rental order not created. Please remeber due date must be on or after checkout date.");
+            return;
+        }
 
-        System.out.print("Enter due date (YYYY-MM-DD): ");
-        String dueDate = scanner.nextLine();
+        String rental_sql = "INSERT INTO Rental_Order VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        //creating new rental order, with dcserialnumber for pick up and drop=null, sicne driverless car is not assgined yet, and with fees=0, since its not calculated yet. 
+        SQL.ps_AddRentalOrder(rental_sql, rentalNumber, customerSSN, robotSerialNumber,null, null, checkOutDate.toString(), dueDate.toString(), null, "Active", 0.0);
+        Robot robot = SQL.getRobot(robotSerialNumber);
+        //using update method, instead of creating seperate methods, to updat the status. using current values for all atribute values except for status, to ensure nothing else is changed.
+        if (robot != null) {
+            String updateSql = "UPDATE Robot SET Status = ?, Warranty_Expiration = ?, Robot_Model_Number = ? WHERE Robot_Serial_Number = ?";
+            SQL.ps_UpdateRobot(updateSql, "Rented", robot.getWarrantyExpiration().toString(), robot.getRobotModelNumber(), robotSerialNumber);
+        }
 
-        System.out.println("Robot rental information entered successfully.");
+        System.out.println("Rental order information entered successfully.");
     }
 
     private static void returnEquipment() {
         System.out.println("\n=== Return Equipment ===");
 
-        System.out.print("Enter rental number: ");
-        String rentalNumber = scanner.nextLine();
+        int rentalNumber;
+        try {
+            System.out.print("Enter rental number to edit: ");
+            rentalNumber = Integer.parseInt(scanner.nextLine().trim());
+        } catch (NumberFormatException e) {
+            System.out.println("Invalid rental number.");
+            return;
+        }
 
-        System.out.print("Enter robot serial number: ");
-        String serialNumber = scanner.nextLine();
+        RentalOrder order = SQL.getRentalOrder(rentalNumber);
+        if (order == null) {
+            System.out.println("Rental order not found.");
+            return;
+        }
 
-        System.out.print("Enter return date (YYYY-MM-DD): ");
-        String returnDate = scanner.nextLine();
+        LocalDate returnDate = readDate("Return date (YYYY-MM-DD): ");
+        if (returnDate == null) {
+            System.out.println("Invalid date, so return is not stored.");
+            return;
+        }
 
-        System.out.println("Equipment return information entered successfully.");
+        String rental_sql = "UPDATE Rental_Order SET Check_Out_Date = ?, Due_Date = ?, Return_Date = ?, Status = ?, Fees = ? WHERE Rental_Number = ?";
+        SQL.ps_UpdateRentalOrder(rental_sql, order.getCheckOutDate().toString(), order.getDueDate().toString(), returnDate.toString(), "Returned", order.getFees(), rentalNumber);
+
+        Robot robot = SQL.getRobot(order.getRobotSerialNumber());
+        //reusing update method, with current values of robot, except for status, which is the one we are tyring to update.
+        if (robot != null) {
+            String updateSql = "UPDATE Robot SET Status = ?, Warranty_Expiration = ?, Robot_Model_Number = ? WHERE Robot_Serial_Number = ?";
+            SQL.ps_UpdateRobot(updateSql, "Available", robot.getWarrantyExpiration().toString(), robot.getRobotModelNumber(), robot.getSerialNumber());
+        }
+
+        System.out.println("Equipment return stored successfully.");
     }
 
     private static void scheduleDelivery() {
         System.out.println("\n=== Schedule Robot Delivery ===");
 
-        System.out.print("Enter rental number: ");
-        String rentalNumber = scanner.nextLine();
+        int rentalNumber;
+        try {
+            System.out.print("Enter rental number to edit: ");
+            rentalNumber = Integer.parseInt(scanner.nextLine().trim());
+        } catch (NumberFormatException e) {
+            System.out.println("Invalid rental number.");
+            return;
+        }
 
-        System.out.print("Enter robot serial number: ");
-        String serialNumber = scanner.nextLine();
+        System.out.print("Enter driverless car serial number for the car that will drop the robot: ");
+        String dcSerialNumber = scanner.nextLine().trim();
 
-        System.out.print("Enter delivery address: ");
-        String address = scanner.nextLine();
-
-        System.out.print("Enter delivery date (YYYY-MM-DD): ");
-        String deliveryDate = scanner.nextLine();
-
-        System.out.print("Enter driverless car ID: ");
-        String carId = scanner.nextLine();
+        String sql = "UPDATE Rental_Order SET DC_Serial_Number_Dropoff = ? WHERE Rental_Number = ?";
+        SQL.ps_UpdateDropoffCar(sql, dcSerialNumber, rentalNumber);
 
         System.out.println("Delivery information entered correctly.");
     }
 
     private static void schedulePickup() {
-        System.out.println("\n=== Schedule Robot Pickup ===");
+        System.out.println("\n=== Schedule Robot Pick up ===");
 
-        System.out.print("Enter rental number: ");
-        String rentalNumber = scanner.nextLine();
+        int rentalNumber;
+        try {
+            System.out.print("Enter rental number to edit: ");
+            rentalNumber = Integer.parseInt(scanner.nextLine().trim());
+        } catch (NumberFormatException e) {
+            System.out.println("Invalid rental number.");
+            return;
+        }
 
-        System.out.print("Enter robot serial number: ");
-        String serialNumber = scanner.nextLine();
+        System.out.print("Enter driverless car serial number for the car that will pick up the robot: ");
+        String dcSerialNumber = scanner.nextLine().trim();
 
-        System.out.print("Enter pickup address: ");
-        String address = scanner.nextLine();
-
-        System.out.print("Enter pickup date (YYYY-MM-DD): ");
-        String pickupDate = scanner.nextLine();
-
-        System.out.print("Enter driverless car ID: ");
-        String carId = scanner.nextLine();
-
-        System.out.println("Robot pickup information entered correctly.");
+        String sql = "UPDATE Rental_Order SET DC_Serial_Number_Pickup = ? WHERE Rental_Number = ?";
+        SQL.ps_UpdatePickupCar(sql, dcSerialNumber, rentalNumber);
+        
+        System.out.println("Pick up information entered correctly.");
     }
-
-
-
-
 }

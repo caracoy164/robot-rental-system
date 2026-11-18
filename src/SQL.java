@@ -323,5 +323,33 @@ public class SQL {
         sqlQuery(Database.conn, ps);
     }
 
+    /**
+     * Create PreparedStatement to assign the drop of driverless car for a rental order.
+     */
+    public static void ps_UpdateDropoffCar(String sql, String dcSerialNumber, int rentalNumber) {
+        try {
+            ps = Database.conn.prepareStatement(sql);
+            ps.setString(1, dcSerialNumber);
+            ps.setInt(2, rentalNumber);
+            ps.executeUpdate();
+            System.out.println("update complete");
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+    }
+    /**
+     * Create PreparedStatement to assign the pick up driverless car for a rental order.
+     */
+    public static void ps_UpdatePickupCar(String sql, String dcSerialNumber, int rentalNumber) {
+        try {
+            ps = Database.conn.prepareStatement(sql);
+            ps.setString(1, dcSerialNumber);
+            ps.setInt(2, rentalNumber);
+            ps.executeUpdate();
+            System.out.println("update complete");
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+    }
 }
 
