@@ -202,84 +202,48 @@ public class App {
     private static void searchRobot() {
         System.out.print("Enter robot serial number: ");
         String serialNumber = scanner.nextLine().trim();
-
-        Robot robot = findRobot(serialNumber);
-
-        if (robot == null) {
-            System.out.println("Robot not found.");
-        } else {
-            System.out.println(robot);
-        }
-    }
-
-    private static Robot findRobot(String serialNumber) {
-        for (Robot robot : robots) {
-            if (robot.getSerialNumber().equalsIgnoreCase(serialNumber)) {
-                return robot;
-            }
-        }
-
-        return null;
+        String sql = "SELECT * FROM Robot WHERE Robot_Serial_Number = ?";
+        SQL.ps_SearchRobot(sql, serialNumber);
     }
 
     private static void editRobot() {
         System.out.print("Enter serial number of robot to edit: ");
         String serialNumber = scanner.nextLine().trim();
 
-        Robot robot = findRobot(serialNumber);
-
+        Robot robot = SQL.getRobot(serialNumber);
         if (robot == null) {
-            System.out.println("Robot not found.");
+            System.out.println("No such robot found");
             return;
         }
 
         System.out.print("New status (press Enter to keep current): ");
         String status = scanner.nextLine().trim();
-        if (!status.isEmpty()) {
-            robot.setStatus(status);
-        }
-
-        System.out.print("New warehouse location (press Enter to keep current): ");
-        String location = scanner.nextLine().trim();
-        if (!location.isEmpty()) {
-            robot.setWarehouseLocation(location);
+        if(status.isEmpty()){
+            status= robot.getStatus();
         }
 
         System.out.print("New warranty expiration YYYY-MM-DD (press Enter to keep current): ");
         String dateInput = scanner.nextLine().trim();
-
-        if (!dateInput.isEmpty()) {
-            try {
-                robot.setWarrantyExpiration(LocalDate.parse(dateInput));
-            } catch (Exception e) {
-                System.out.println("Invalid date. Other changes were saved, but the date was unchanged.");
-            }
+        if(dateInput.isEmpty()){
+            LocalDate temp= robot.getWarrantyExpiration();
+            dateInput= temp.toString();
         }
 
-        System.out.println("Robot updated.");
+        System.out.print("New robot model (press Enter to keep current): ");
+        String model = scanner.nextLine().trim();
+        if (model.isEmpty()) {
+            model= robot.getRobotModelNumber();
+        }
+
+        String sql = "UPDATE Robot SET Status = ?, Warranty_Expiration = ?, Robot_Model_Number = ? WHERE Robot_Serial_Number = ?";
+        SQL.ps_UpdateRobot(sql, status, dateInput, model, serialNumber);
     }
 
     private static void deleteRobot() {
         System.out.print("Enter serial number of robot to delete: ");
         String serialNumber = scanner.nextLine().trim();
-
-        Robot robot = findRobot(serialNumber);
-
-        if (robot == null) {
-            System.out.println("Robot not found.");
-            return;
-        }
-
-        // Prevent deleting a robot referenced by a rental order.
-        for (RentalOrder order : rentalOrders) {
-            if (order.getRobotSerialNumber().equalsIgnoreCase(serialNumber)) {
-                System.out.println("Cannot delete this robot because a rental order references it.");
-                return;
-            }
-        }
-
-        robots.remove(robot);
-        System.out.println("Robot deleted.");
+        String sql = "DELETE FROM Robot WHERE Robot_Serial_Number = ?";
+        SQL.ps_DeleteRobot(sql, serialNumber);
     }
 
 
@@ -391,24 +355,9 @@ public class App {
             System.out.println("Invalid rental number.");
             return;
         }
-
-        RentalOrder order = findRentalOrder(rentalNumber);
-
-        if (order == null) {
-            System.out.println("Rental order not found.");
-        } else {
-            System.out.println(order);
-        }
-    }
-
-    private static RentalOrder findRentalOrder(int rentalNumber) {
-        for (RentalOrder order : rentalOrders) {
-            if (order.getRentalNumber() == rentalNumber) {
-                return order;
-            }
-        }
-
-        return null;
+        
+        String sql = "SELECT * FROM Rental_Order WHERE Rental_Number = ?";
+        SQL.ps_SearchRentalOrder(sql, rentalNumber);
     }
 
     private static void editRentalOrder() {
@@ -422,100 +371,54 @@ public class App {
             return;
         }
 
-        RentalOrder order = findRentalOrder(rentalNumber);
-
+        RentalOrder order = SQL.getRentalOrder(rentalNumber);
         if (order == null) {
             System.out.println("Rental order not found.");
             return;
         }
 
-        System.out.println("Press Enter to keep the current value.");
-
-        System.out.print("New checkout date (" + order.getCheckOutDate() + "): ");
+        System.out.print("New checkout date (press Enter to keep current): ");
         String checkoutInput = scanner.nextLine().trim();
-        LocalDate newCheckout = order.getCheckOutDate();
-
-        if (!checkoutInput.isEmpty()) {
-            try {
-                newCheckout = LocalDate.parse(checkoutInput);
-            } catch (Exception e) {
-                System.out.println("Invalid checkout date. No changes saved.");
-                return;
-            }
+        if (checkoutInput.isEmpty()) {
+            checkoutInput = order.getCheckOutDate().toString();
         }
 
-        System.out.print("New due date (" + order.getDueDate() + "): ");
+        System.out.print("New due date (press Enter to keep current): ");
         String dueInput = scanner.nextLine().trim();
-        LocalDate newDue = order.getDueDate();
-
-        if (!dueInput.isEmpty()) {
-            try {
-                newDue = LocalDate.parse(dueInput);
-            } catch (Exception e) {
-                System.out.println("Invalid due date. No changes saved.");
-                return;
-            }
+        if (dueInput.isEmpty()) {
+            dueInput = order.getDueDate().toString();
         }
 
-        if (newDue.isBefore(newCheckout)) {
-            System.out.println("Due date cannot be before checkout. No changes saved.");
-            return;
-        }
-
-        System.out.print("New return date (" + order.getReturnDate()
-                + ", type NONE to clear): ");
+        System.out.print("New return date (press Enter to keep current, type NONE to clear): ");
         String returnInput = scanner.nextLine().trim();
-        LocalDate newReturn = order.getReturnDate();
+        String returnDateStr;
 
         if (returnInput.equalsIgnoreCase("NONE")) {
-            newReturn = null;
-        } else if (!returnInput.isEmpty()) {
-            try {
-                newReturn = LocalDate.parse(returnInput);
-            } catch (Exception e) {
-                System.out.println("Invalid return date. No changes saved.");
-                return;
+            returnDateStr = null;
+        } else if (returnInput.isEmpty()) {
+            returnDateStr=null;
+            if(order.getReturnDate() !=null){
+                returnDateStr=order.getReturnDate().toString();
             }
+        }else {
+            returnDateStr = returnInput;
+        }
+    
+        System.out.print("New status (press Enter to keep current): ");
+        String status = scanner.nextLine().trim();
+        if (status.isEmpty()) {
+            status = order.getStatus();
         }
 
-        if (newReturn != null && newReturn.isBefore(newCheckout)) {
-            System.out.println("Return date cannot be before checkout. No changes saved.");
-            return;
-        }
-
-        System.out.print("New status (" + order.getStatus() + "): ");
-        String newStatus = scanner.nextLine().trim();
-
-        System.out.print("New fees (" + order.getFees() + "): ");
+        System.out.print("New fees (press Enter to keep current): ");
         String feesInput = scanner.nextLine().trim();
-        double newFees = order.getFees();
-
-        if (!feesInput.isEmpty()) {
-            try {
-                newFees = Double.parseDouble(feesInput);
-
-                if (!Double.isFinite(newFees) || newFees < 0) {
-                    System.out.println("Fees must be nonnegative. No changes saved.");
-                    return;
-                }
-            } catch (NumberFormatException e) {
-                System.out.println("Invalid fees. No changes saved.");
-                return;
-            }
+        double fees= order.getFees();
+        if(!feesInput.isEmpty()){
+            fees= Double.parseDouble(feesInput);
         }
 
-        // Apply changes only after all inputs have been validated.
-        order.setCheckOutDate(newCheckout);
-        order.setDueDate(newDue);
-        order.setReturnDate(newReturn);
-
-        if (!newStatus.isEmpty()) {
-            order.setStatus(newStatus);
-        }
-
-        order.setFees(newFees);
-
-        System.out.println("Rental order updated successfully.");
+        String sql = "UPDATE Rental_Order SET Check_Out_Date = ?, Due_Date = ?, Return_Date = ?, Status = ?, Fees = ? WHERE Rental_Number = ?";
+        SQL.ps_UpdateRentalOrder(sql, checkoutInput, dueInput, returnDateStr, status, fees, rentalNumber);
     }
 
     private static void deleteRentalOrder() {
@@ -529,15 +432,9 @@ public class App {
             return;
         }
 
-        RentalOrder order = findRentalOrder(rentalNumber);
+        String sql = "DELETE FROM Rental_Order WHERE Rental_Number = ?";
+        SQL.ps_DeleteRentalOrder(sql, rentalNumber);
 
-        if (order == null) {
-            System.out.println("Rental order not found.");
-            return;
-        }
-
-        rentalOrders.remove(order);
-        System.out.println("Rental order deleted successfully.");
     }
 
     private static LocalDate readDate(String prompt) {
