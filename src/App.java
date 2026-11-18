@@ -1,6 +1,7 @@
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Scanner;
+import java.sql.SQLException;
 
 public class App {
     private static final Scanner scanner = new Scanner(System.in);
@@ -8,7 +9,8 @@ public class App {
     private static final ArrayList<RentalOrder> rentalOrders = new ArrayList<>();
 
     public static void main(String[] args) {
-       boolean running = true;
+        Database.conn = Database.initializeDB("robot_company.db");
+        boolean running = true;
 
         while (running) {
             System.out.println("\n=== Robot Rental System ===");
@@ -52,6 +54,11 @@ public class App {
         }
 
         scanner.close();
+        try {
+            Database.conn.close();
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
     }
 
 
@@ -138,35 +145,46 @@ public class App {
 
     
     private static void addRobot() {
+        //not doing any check for any attribute value except for date because foreign key/primary keys in the databse will do it anyway.
         System.out.print("Serial number: ");
         String serialNumber = scanner.nextLine().trim();
-
-        if (findRobot(serialNumber) != null) {
-            System.out.println("A robot with that serial number already exists.");
-            return;
-        }
 
         System.out.print("Status: ");
         String status = scanner.nextLine().trim();
 
-        System.out.print("Warehouse location: ");
-        String location = scanner.nextLine().trim();
-
         System.out.print("Warranty expiration (YYYY-MM-DD): ");
         LocalDate warrantyExpiration;
 
+        //checking date, because otherwise the code may except the wrong form of date, just because its a string, but we also want it to be in proper date form, so adding the check here. 
         try {
             warrantyExpiration = LocalDate.parse(scanner.nextLine().trim());
         } catch (Exception e) {
+            //reaches here if date is not valid and so we must exit. 
             System.out.println("Invalid date. Robot was not added.");
             return;
         }
 
-        Robot robot = new Robot(
-            serialNumber, status, location, warrantyExpiration
-        );
+        System.out.print("Robot model number (press Enter to leave blank): ");
+        String robotModelNumber = scanner.nextLine().trim();
+        //inserting null, when robot model is empty. 
+        if(robotModelNumber.isEmpty()){
+            robotModelNumber=null;
+        }
 
-        robots.add(robot);
+        String robotSql= "INSERT INTO Robot VALUES(?,?,?,?)";
+        SQL.ps_AddRobot(robotSql, serialNumber, status, warrantyExpiration.toString(),robotModelNumber);
+
+        System.out.print("Facility state:");
+        String state = scanner.nextLine().trim();
+
+        System.out.print("Facility city:");
+        String city = scanner.nextLine().trim();
+
+        System.out.print("Facility street adress:");
+        String adress = scanner.nextLine().trim();
+        
+        String assetSql= "INSERT INTO Facility_Assets VALUES(?,?,?,?)";
+        SQL.ps_AddFacilityAsset(assetSql, serialNumber, state, city, adress);
         System.out.println("Robot added successfully.");
     }
 
@@ -267,7 +285,7 @@ public class App {
 
     private static void addRentalOrder() {
         int rentalNumber;
-
+        // making sure input is a vlaid number. 
         try {
             System.out.print("Rental number: ");
             rentalNumber = Integer.parseInt(scanner.nextLine().trim());
@@ -276,19 +294,11 @@ public class App {
             return;
         }
 
-        if (findRentalOrder(rentalNumber) != null) {
-            System.out.println("That rental number already exists.");
-            return;
-        }
+        System.out.print("Customer SSN: ");
+        String customerSsn = scanner.nextLine().trim();
 
         System.out.print("Robot serial number: ");
         String robotSerialNumber = scanner.nextLine().trim();
-
-        // Validate the foreign key.
-        if (findRobot(robotSerialNumber) == null) {
-            System.out.println("Robot not found. Rental order was not added.");
-            return;
-        }
 
         LocalDate checkOutDate = readDate("Check out date (YYYY-MM-DD): ");
         if (checkOutDate == null) {
@@ -320,6 +330,11 @@ public class App {
             }
         }
 
+        String returnDateStr = null;
+        if(returnDate != null){
+            returnDateStr = returnDate.toString();
+        }
+
         System.out.print("Status: ");
         String status = scanner.nextLine().trim();
 
@@ -337,18 +352,22 @@ public class App {
             return;
         }
 
-        RentalOrder order = new RentalOrder(
-            rentalNumber,
-            robotSerialNumber,
-            checkOutDate,
-            dueDate,
-            returnDate,
-            status,
-            fees
-        );
+        System.out.print("Drop off driverless car serial number (press enter to leave blank): ");
+        String dcDrop= scanner.nextLine().trim();
+        //inserting null, when robot model is empty. 
+        if(dcDrop.isEmpty()){
+            dcDrop=null;
+        }
 
-        rentalOrders.add(order);
-        System.out.println("Rental order added successfully.");
+        System.out.print("Pick up driverless car serial number (press enter to leave blank): ");
+        String dcPick= scanner.nextLine().trim();
+        //inserting null, when robot model is empty. 
+        if(dcPick.isEmpty()){
+            dcPick=null;
+        }
+
+        String sql= "INSERT INTO Rental_Order VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        SQL.ps_AddRentalOrder(sql, rentalNumber, customerSsn, robotSerialNumber,dcPick, dcDrop, checkOutDate.toString(),dueDate.toString(), returnDateStr, status, fees);
     }
 
     private static void listRentalOrders() {

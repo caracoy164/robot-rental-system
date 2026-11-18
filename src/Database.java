@@ -26,6 +26,8 @@ public class Database {
         try {
             conn = DriverManager.getConnection(url);
             if (conn != null) {
+				//making sure forieng key check in on. 
+				conn.createStatement().execute("PRAGMA foreign_keys = ON");
             	// Provides some positive assurance the connection and/or creation was successful.
                 DatabaseMetaData meta = conn.getMetaData();
                 System.out.println("The driver name is " + meta.getDriverName());

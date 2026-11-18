@@ -2,18 +2,24 @@ import java.time.LocalDate;
 
 public class RentalOrder {
     private int rentalNumber;   // pk
+    private String customerSSn; //fk
     private String robotSerialNumber;   // fk
+    private String dcSerialNumberPickUp; //fk
+    private String dcSerialNumberDropOff; //fk
     private LocalDate checkOutDate;
     private LocalDate dueDate;
     private LocalDate returnDate;
     private String status;
     private double fees;
 
-    public RentalOrder(int rentalNumber, String robotSerialNumber,
-                       LocalDate checkOutDate, LocalDate dueDate,
-                       LocalDate returnDate, String status, double fees) {
+    public RentalOrder(int rentalNumber, String ssn, String robotSerialNumber, 
+        String dcSerialNumberPickUp, String dcSerialNumberDropOff, LocalDate checkOutDate, LocalDate dueDate, 
+        LocalDate returnDate, String status, double fees) {
         this.rentalNumber = rentalNumber;
+        this.customerSSn=ssn;
         this.robotSerialNumber = robotSerialNumber;
+        this.dcSerialNumberPickUp=dcSerialNumberPickUp;
+        this.dcSerialNumberDropOff=dcSerialNumberDropOff;
         this.checkOutDate = checkOutDate;
         this.dueDate = dueDate;
         this.returnDate = returnDate;
@@ -25,8 +31,19 @@ public class RentalOrder {
         return rentalNumber;
     }
 
+    public String getCustomerSSn() {
+        return customerSSn;
+    }
     public String getRobotSerialNumber() {
         return robotSerialNumber;
+    }
+
+    public String getdcSerialNumberPickUp() {
+        return dcSerialNumberPickUp;
+    }
+
+    public String getdcSerialNumberDropOff() {
+        return dcSerialNumberDropOff;
     }
 
     public LocalDate getCheckOutDate() {
@@ -53,6 +70,21 @@ public class RentalOrder {
     public void setRentalNumber(int rentalNumber){
         this.rentalNumber = rentalNumber;
     }
+    public void setCustomerSSn(String ssn){
+        this.customerSSn=ssn;
+    }
+
+    public void setRobotSerialNumber(String robotSerialNumber) {
+        this.robotSerialNumber = robotSerialNumber;
+    }
+
+    public void setdcSerialNumberPickUp(String dcSerialNumber) {
+        this.dcSerialNumberPickUp = dcSerialNumber;
+    }
+
+    public void setdcSerialNumberDropOff(String dcSerialNumber) {
+        this.dcSerialNumberDropOff = dcSerialNumber;
+    }
 
     public void setCheckOutDate(LocalDate checkOutDate) {
         this.checkOutDate = checkOutDate;
@@ -78,7 +110,10 @@ public class RentalOrder {
     public String toString() {
         return "RentalOrder{" +
                 "rentalNumber=" + rentalNumber +
+                "CustomerSSn =" + customerSSn +
                 ", robotSerialNumber='" + robotSerialNumber + '\'' +
+                ", dcSerialNumber pick up ='" + dcSerialNumberPickUp + '\'' +
+                ", dcSerialNumber drop off ='" + dcSerialNumberDropOff + '\'' +
                 ", checkOutDate=" + checkOutDate +
                 ", dueDate=" + dueDate +
                 ", returnDate=" + returnDate +

@@ -3,14 +3,14 @@ import java.time.LocalDate;
 public class Robot {
     private String serialNumber;    //pk
     private String status;
-    private String warehouseLocation;
     private LocalDate warrantyExpiration;
+    private String robotModelNumber; //fk
 
-    public Robot(String serialNumber, String status, String warehouseLocation, LocalDate warrantyExpiration) {
+    public Robot(String serialNumber, String status, LocalDate warrantyExpiration, String modelNumber) {
         this.serialNumber = serialNumber;
         this.status = status;
-        this.warehouseLocation = warehouseLocation;
         this.warrantyExpiration = warrantyExpiration;
+        this.robotModelNumber= modelNumber;
     }
 
     public String getSerialNumber() {
@@ -21,8 +21,8 @@ public class Robot {
         return status;
     }
 
-    public String getWarehouseLocation() {
-        return warehouseLocation;
+    public String getRobotModelNumber() {
+        return robotModelNumber;
     }
 
     public LocalDate getWarrantyExpiration() {
@@ -38,8 +38,8 @@ public class Robot {
         this.status = status;
     }
 
-    public void setWarehouseLocation(String warehouseLocation) {
-        this.warehouseLocation = warehouseLocation;
+    public void setrobotModelNumber(String modelNumber) {
+        this.robotModelNumber = modelNumber;
     }
 
     public void setWarrantyExpiration(LocalDate warrantyExpiration) {
@@ -51,8 +51,8 @@ public class Robot {
         return "Robot{" +
                 "serialNumber='" + serialNumber + '\'' +
                 ", status='" + status + '\'' +
-                ", warehouseLocation='" + warehouseLocation + '\'' +
-                ", warrantyExpiration=" + warrantyExpiration +
+                ", robot model number ='" + robotModelNumber + '\'' +
+                ", warranty expiration=" + warrantyExpiration +
                 '}';
     }
 }
