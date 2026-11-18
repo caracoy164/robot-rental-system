@@ -4,7 +4,6 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 
 public class Database {
-    private static final String DATABASE = "robot_company.db";
 	
 	public static Connection conn = null;
 	
