@@ -20,7 +20,8 @@ public class App {
             System.out.println("4. Return Equipment");
             System.out.println("5. Schedule Robot Delivery");
             System.out.println("6. Schedule Robot Pickup");
-            System.out.println("7. Exit");
+            System.out.println("7. View Useful Reports");
+            System.out.println("8. Exit");
             System.out.print("Choose an option: ");
 
             String choice = scanner.nextLine();
@@ -45,6 +46,9 @@ public class App {
                     schedulePickup();
                     break;
                 case "7":
+                    viewUsefulReports();
+                    break;
+                case "8":
                     running = false;
                     System.out.println("Goodbye!");
                     break;
@@ -568,4 +572,50 @@ public class App {
         
         System.out.println("Pick up information entered correctly.");
     }
+
+    public static void viewUsefulReports() {
+        System.out.println("\n=== Useful Reports ===");
+        System.out.println("1. List all all of the robots rented out by a specific customer");
+        System.out.println("2. Find the most used robot by rent time");
+        System.out.println("3. Find the most popular manufacturer by the number of robots rented");
+        System.out.println("4. Find the most used Driverless Car in the database by delivery distance");
+        System.out.println("5. Find the customer who has rented the most robots");
+        System.out.println("6. List all of the robots per manufacturer that were released before a specific year");
+        System.out.println("7. Back to Main Menu");
+        System.out.print("Choose an option: ");
+
+        String choice = scanner.nextLine();
+
+        switch (choice) {
+            case "1":
+                System.out.println("Enter customer SSN: ");
+                int customerSSN = Integer.parseInt(scanner.nextLine());
+                String sql1 = "SELECT * FROM Rental_Order WHERE Customer_SSN = ?";
+                SQL.ps_listRobotsByCustomer(sql1, customerSSN);
+                break;
+            case "2":
+                String sql2 = "SELECT Robot_Serial_Number, SUM(JULIANDAY(Return_Date) - JULIANDAY(Check_Out_Date)) AS Total_Rent_Days, COUNT(Rental_Number) AS Times_Rented FROM Rental_Order WHERE Robot_Serial_Number IS NOT NULL AND Check_Out_Date IS NOT NULL AND Return_Date IS NOT NULL GROUP BY Robot_Serial_Number ORDER BY Total_Rent_Days DESC LIMIT 1";
+                SQL.ps_findMostUsedRobot(sql2);
+                break;
+            case "3":
+                String sql3 = "SELECT M.Manufacturer_Name FROM Manufacturer AS M JOIN Model AS MO ON M.Manufacturer_Name = MO.Manufacturer_Name JOIN Robot AS R ON MO.Model_Number = R.Robot_Model_Number JOIN Rental_Order AS RO ON R.Robot_Serial_Number = RO.Robot_Serial_Number GROUP BY M.Manufacturer_Name ORDER BY COUNT(RO.Rental_Number) DESC LIMIT 1;";
+                SQL.ps_findMostPopularManufacturer(sql3);
+                break;
+            case "4":
+                findMostUsedDriverlessCar();
+                break;
+            case "5":
+                String sql5 = "SELECT Customer_SSN, COUNT(Robot_Serial_Number) AS Robot_Serial_Number_Count FROM Rental_Order GROUP BY Customer_SSN ORDER BY Robot_Serial_Number_Count DESC LIMIT 1";
+                SQL.ps_findCustomerWithMostRents(sql5);
+                break;
+            case "6":
+                listRobotsByManufacturer();
+                break;
+            case "7":
+                return; // Go back to main menu
+            default:
+                System.out.println("Invalid option. Try again.");
+        }
+    }
+
 }

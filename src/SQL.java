@@ -351,5 +351,46 @@ public class SQL {
             System.out.println(e.getMessage());
         }
     }
-}
 
+    public static void ps_listRobotsByCustomer(String sql, int customerSSN) {
+        try {
+            ps = Database.conn.prepareStatement(sql);
+            ps.setInt(1, customerSSN);
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+        
+        sqlQuery(Database.conn, ps);
+    }
+
+    public static void ps_findMostUsedRobot(String sql) {
+        try {
+            ps = Database.conn.prepareStatement(sql);
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+        
+        sqlQuery(Database.conn, ps);
+    }
+
+    public static void ps_findMostPopularManufacturer(String sql) {
+        try {
+            ps = Database.conn.prepareStatement(sql);
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+        
+        sqlQuery(Database.conn, ps);
+    }
+
+    public static void ps_findCustomerWithMostRents(String sql) {
+        try {
+            ps = Database.conn.prepareStatement(sql);
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+        
+        sqlQuery(Database.conn, ps);
+    }
+
+}
